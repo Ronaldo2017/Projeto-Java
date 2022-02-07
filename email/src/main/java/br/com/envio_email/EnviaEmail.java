@@ -1,9 +1,10 @@
 package br.com.envio_email;
 
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.activation.DataHandler;
@@ -30,15 +31,13 @@ public class EnviaEmail {
 
 	private String userName = "ronaldocostateste@gmail.com";
 	private String senha = "Ron@2020";
-	
+
 	private String listaDestinatarios = "";
 	private String nomeRemetente = "";
 	private String assuntoEmail = "";
 	private String textoEmail = "";
-	
-	
-	public EnviaEmail(String listaDestinatarios, String nomeRemetente, String assuntoEmail,
-			String textoEmail) {
+
+	public EnviaEmail(String listaDestinatarios, String nomeRemetente, String assuntoEmail, String textoEmail) {
 		this.listaDestinatarios = listaDestinatarios;
 		this.nomeRemetente = nomeRemetente;
 		this.assuntoEmail = assuntoEmail;
@@ -75,18 +74,17 @@ public class EnviaEmail {
 		mensagem.setSubject(assuntoEmail);// assunto do email
 		mensagem.setText(textoEmail);
 
-		if(envioHtml) {
+		if (envioHtml) {
 			mensagem.setContent(textoEmail, "text/html; charset=utf-8");
-		}else {
+		} else {
 			mensagem.setText(textoEmail);
 		}
-		
+
 		// envio
 		Transport.send(mensagem);
 
 	}
-	
-	
+
 	public void enviarEmailAnexo(boolean envioHtml) throws Exception {
 
 		Properties properties = new Properties();
@@ -117,47 +115,61 @@ public class EnviaEmail {
 		mensagem.setSubject(assuntoEmail);// assunto do email
 		mensagem.setText(textoEmail);
 
-		
-		/*primeira parte do email que é o texto e a descriçao do email*/
+		/* primeira parte do email que é o texto e a descriçao do email */
 		MimeBodyPart corpoEmail = new MimeBodyPart();
-		
-		if(envioHtml) {
+
+		if (envioHtml) {
 			corpoEmail.setContent(textoEmail, "text/html; charset=utf-8");
-		}else {
+		} else {
 			corpoEmail.setText(textoEmail);
 		}
-		
-		//segunda parte do email, esse é o anexo
-		MimeBodyPart anexoEmail = new MimeBodyPart();
-		
-		//é o passado o simulador de pdf, passa o arquivo gravado no BD
-		anexoEmail.setDataHandler(new DataHandler(new ByteArrayDataSource(silumadorDePDF(), "application/pdf")));
-		anexoEmail.setFileName("anexoEmail.pdf");
-		
-		//junta as partes
+
+		// lista de arquivos
+		List<FileInputStream> arquivos = new ArrayList<FileInputStream>();
+		arquivos.add(silumadorDePDF());
+		arquivos.add(silumadorDePDF());
+		arquivos.add(silumadorDePDF());
+		arquivos.add(silumadorDePDF());
+
 		Multipart multipart = new MimeMultipart();
 		multipart.addBodyPart(corpoEmail);
-		multipart.addBodyPart(anexoEmail);
-		
+
+		int index = 0;
+		for (FileInputStream fileInputStream : arquivos) {
+
+			// segunda parte do email, esse é o anexo
+			MimeBodyPart anexoEmail = new MimeBodyPart();
+
+			// é o passado o simulador de pdf, passa o arquivo gravado no BD
+			anexoEmail.setDataHandler(new DataHandler(new ByteArrayDataSource(fileInputStream, "application/pdf")));
+			anexoEmail.setFileName("anexoEmail" + index + ".pdf");
+
+			// junta as partes
+
+			multipart.addBodyPart(anexoEmail);
+			index ++;
+			
+		}
 		mensagem.setContent(multipart);
-		
+
 		// envio
 		Transport.send(mensagem);
 
 	}
-	
-	//metodo simula o PDF ou qualquer arquivo que possa ser enviado em anexo no email
-	//pode pegar o arquivo do BD base64, byte[], Stream de arquvos ou em pasta
-	//retorna um pdf em branco com o texto do paragrafo de exemplo
-	private FileInputStream silumadorDePDF() throws Exception{
-		Document document = new Document();//cria o documento em tempo de execução
-		File file = new File("fileanexo.fdf");
+
+	// metodo simula o PDF ou qualquer arquivo que possa ser enviado em anexo no
+	// email
+	// pode pegar o arquivo do BD base64, byte[], Stream de arquvos ou em pasta
+	// retorna um pdf em branco com o texto do paragrafo de exemplo
+	private FileInputStream silumadorDePDF() throws Exception {
+		Document document = new Document();// cria o documento em tempo de execução
+		File file = new File("fileanexo.pdf");
 		file.createNewFile();
-		PdfWriter.getInstance(document, new FileOutputStream(file));//escrevendo o conteudo do arquivo
+		PdfWriter.getInstance(document, new FileOutputStream(file));// escrevendo o conteudo do arquivo
 		document.open();
 		document.add(new Paragraph("Conteúdo do PDF anexo com Java Mail, esse texto é do PDF."));
 		document.close();
-		
+
 		return new FileInputStream(file);
 	}
 
