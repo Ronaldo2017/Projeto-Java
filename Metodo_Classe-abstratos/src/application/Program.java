@@ -28,7 +28,7 @@ public class Program {
 			String nome = sc.nextLine();
 			System.out.print("Anual income: ");
 			double rendaAnual = sc.nextDouble();
-			if (ch == 'i') {
+			if (ch  == 'i') {
 				System.out.println("Número de funcionários: ");
 				int numeroDeFuncionarios = sc.nextInt();
 				list.add(new PJ(nome, rendaAnual, numeroDeFuncionarios));
